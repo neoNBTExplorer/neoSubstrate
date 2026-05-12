@@ -62,7 +62,7 @@ namespace Substrate.Core
                             fstr.Seek(0, SeekOrigin.Begin);
 
                             byte[] data = new byte[length];
-                            fstr.Read(data, 0, data.Length);
+                            fstr.ReadExactly(data, 0, data.Length);
 
                             return new MemoryStream(data);
                         }

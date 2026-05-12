@@ -12,11 +12,11 @@ namespace Substrate.Core
     /// </summary>
     public abstract class RegionManager : IRegionManager
     {
-        protected string _regionPath;
+        protected string RegionPath;
 
-        protected Dictionary<RegionKey, IRegion> _cache;
+        protected Dictionary<RegionKey, IRegion> Cache;
 
-        protected ChunkCache _chunkCache;
+        protected ChunkCache ChunkCache;
 
 
         protected abstract IRegion CreateRegionCore (int rx, int rz);
@@ -34,9 +34,9 @@ namespace Substrate.Core
         /// <param name="cache">The shared chunk cache to hold chunk data in.</param>
         public RegionManager (string regionDir, ChunkCache cache)
         {
-            _regionPath = regionDir;
-            _chunkCache = cache;
-            _cache = new Dictionary<RegionKey, IRegion>();
+            RegionPath = regionDir;
+            ChunkCache = cache;
+            Cache = new Dictionary<RegionKey, IRegion>();
         }
 
         /// <inherits />
@@ -46,14 +46,14 @@ namespace Substrate.Core
             IRegion r;
 
             try {
-                if (_cache.TryGetValue(k, out r) == false) {
+                if (Cache.TryGetValue(k, out r) == false) {
                     r = CreateRegionCore(rx, rz);
-                    _cache.Add(k, r);
+                    Cache.Add(k, r);
                 }
                 return r;
             }
             catch (FileNotFoundException) {
-                _cache.Add(k, null);
+                Cache.Add(k, null);
                 return null;
             }
         }
@@ -78,7 +78,7 @@ namespace Substrate.Core
                 r = CreateRegionCore(rx, rz);
 
                 RegionKey k = new RegionKey(rx, rz);
-                _cache[k] = r;
+                Cache[k] = r;
             }
 
             return r;
@@ -90,7 +90,7 @@ namespace Substrate.Core
         /// <returns>The path to the region directory.</returns>
         public string GetRegionPath ()
         {
-            return _regionPath;
+            return RegionPath;
         }
 
         // XXX: Exceptions
@@ -103,7 +103,7 @@ namespace Substrate.Core
             }
 
             RegionKey k = new RegionKey(rx, rz);
-            _cache.Remove(k);
+            Cache.Remove(k);
 
             DeleteRegionCore(r);
 

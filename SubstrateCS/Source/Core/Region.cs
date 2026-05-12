@@ -15,24 +15,24 @@ namespace Substrate.Core
     /// </summary>
     public abstract class Region : IDisposable, IRegion
     {
-        protected const int XDIM = 32;
-        protected const int ZDIM = 32;
-        protected const int XMASK = XDIM - 1;
-        protected const int ZMASK = ZDIM - 1;
-        protected const int XLOG = 5;
-        protected const int ZLOG = 5;
+        protected const int Kxdim = 32;
+        protected const int Kzdim = 32;
+        protected const int Kxmask = Kxdim - 1;
+        protected const int Kzmask = Kzdim - 1;
+        protected const int Kxlog = 5;
+        protected const int Kzlog = 5;
 
-        protected int _rx;
-        protected int _rz;
+        protected int Rx;
+        protected int Rz;
         private bool _disposed = false;
 
-        protected RegionManager _regionMan;
+        protected RegionManager RegionMan;
 
         private static Regex _namePattern = new Regex("r\\.(-?[0-9]+)\\.(-?[0-9]+)\\.mca$");
 
         private WeakReference _regionFile;
 
-        protected ChunkCache _cache;
+        protected ChunkCache Cache;
 
         protected abstract IChunk CreateChunkCore (int cx, int cz);
 
@@ -43,13 +43,13 @@ namespace Substrate.Core
         /// <inherit />
         public int X
         {
-            get { return _rx; }
+            get { return Rx; }
         }
 
         /// <inherit />
         public int Z
         {
-            get { return _rz; }
+            get { return Rz; }
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace Substrate.Core
         /// </summary>
         public int XDim
         {
-            get { return XDIM; }
+            get { return Kxdim; }
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace Substrate.Core
         /// </summary>
         public int ZDim
         {
-            get { return ZDIM; }
+            get { return Kzdim; }
         }
 
         public abstract string GetFileName ();
@@ -86,11 +86,11 @@ namespace Substrate.Core
         /// to chunks on their own.  This allows regions to easily pass off requests outside of their bounds, if necessary.</para></remarks>
         public Region (RegionManager rm, ChunkCache cache, int rx, int rz)
         {
-            _regionMan = rm;
-            _cache = cache;
+            RegionMan = rm;
+            Cache = cache;
             _regionFile = new WeakReference(null);
-            _rx = rx;
-            _rz = rz;
+            Rx = rx;
+            Rz = rz;
 
             if (!File.Exists(GetFilePath())) {
                 throw new FileNotFoundException();
@@ -110,13 +110,13 @@ namespace Substrate.Core
         /// to chunks on their own.  This allows regions to easily pass off requests outside of their bounds, if necessary.</para></remarks>
         public Region (RegionManager rm, ChunkCache cache, string filename)
         {
-            _regionMan = rm;
-            _cache = cache;
+            RegionMan = rm;
+            Cache = cache;
             _regionFile = new WeakReference(null);
 
-            ParseFileNameCore(filename, out _rx, out _rz);
+            ParseFileNameCore(filename, out Rx, out Rz);
 
-            if (!File.Exists(Path.Combine(_regionMan.GetRegionPath(), filename))) {
+            if (!File.Exists(Path.Combine(RegionMan.GetRegionPath(), filename))) {
                 throw new FileNotFoundException();
             }
         }
@@ -248,8 +248,8 @@ namespace Substrate.Core
             RegionFile rf = GetRegionFile();
 
             int count = 0;
-            for (int x = 0; x < XDIM; x++) {
-                for (int z = 0; z < ZDIM; z++) {
+            for (int x = 0; x < Kxdim; x++) {
+                for (int z = 0; z < Kzdim; z++) {
                     if (rf.HasChunk(x, z)) {
                         count++;
                     }
@@ -268,18 +268,18 @@ namespace Substrate.Core
                 return (alt == null) ? null : alt.GetChunkRef(ForeignX(lcx), ForeignZ(lcz));
             }
 
-            int cx = lcx + _rx * XDIM;
-            int cz = lcz + _rz * ZDIM;
+            int cx = lcx + Rx * Kxdim;
+            int cz = lcz + Rz * Kzdim;
 
             ChunkKey k = new ChunkKey(cx, cz);
-            ChunkRef c = _cache.Fetch(k);
+            ChunkRef c = Cache.Fetch(k);
             if (c != null) {
                 return c;
             }
 
             c = ChunkRef.Create(this, lcx, lcz);
             if (c != null) {
-                _cache.Insert(c);
+                Cache.Insert(c);
             }
 
             return c;
@@ -295,8 +295,8 @@ namespace Substrate.Core
 
             DeleteChunk(lcx, lcz);
 
-            int cx = lcx + _rx * XDIM;
-            int cz = lcz + _rz * ZDIM;
+            int cx = lcx + Rx * Kxdim;
+            int cz = lcz + Rz * Kzdim;
 
             IChunk c = CreateChunkCore(cx, cz);
             using (Stream chunkOutStream = GetChunkOutStream(lcx, lcz))
@@ -305,7 +305,7 @@ namespace Substrate.Core
             }
 
             ChunkRef cr = ChunkRef.Create(this, lcx, lcz);
-            _cache.Insert(cr);
+            Cache.Insert(cr);
 
             return cr;
         }
@@ -321,7 +321,7 @@ namespace Substrate.Core
         /// <returns>The global X-coordinate of the corresponding chunk.</returns>
         public int ChunkGlobalX (int cx)
         {
-            return _rx * XDIM + cx;
+            return Rx * Kxdim + cx;
         }
 
         /// <summary>
@@ -331,7 +331,7 @@ namespace Substrate.Core
         /// <returns>The global Z-coordinate of the corresponding chunk.</returns>
         public int ChunkGlobalZ (int cz)
         {
-            return _rz * ZDIM + cz;
+            return Rz * Kzdim + cz;
         }
 
         /// <summary>
@@ -418,10 +418,10 @@ namespace Substrate.Core
             rf.DeleteChunk(lcx, lcz);
 
             ChunkKey k = new ChunkKey(ChunkGlobalX(lcx), ChunkGlobalZ(lcz));
-            _cache.Remove(k);
+            Cache.Remove(k);
 
             if (ChunkCount() == 0) {
-                _regionMan.DeleteRegion(X, Z);
+                RegionMan.DeleteRegion(X, Z);
                 _regionFile.Target = null;
             }
 
@@ -446,8 +446,8 @@ namespace Substrate.Core
 
             DeleteChunk(lcx, lcz);
 
-            int cx = lcx + _rx * XDIM;
-            int cz = lcz + _rz * ZDIM;
+            int cx = lcx + Rx * Kxdim;
+            int cz = lcz + Rz * Kzdim;
 
             chunk.SetLocation(cx, cz);
             using (Stream chunkOutStream = GetChunkOutStream(lcx, lcz))
@@ -456,7 +456,7 @@ namespace Substrate.Core
             }
 
             ChunkRef cr = ChunkRef.Create(this, lcx, lcz);
-            _cache.Insert(cr);
+            Cache.Insert(cr);
 
             return cr;
         }
@@ -467,10 +467,10 @@ namespace Substrate.Core
         /// <returns>The number of chunks that were saved.</returns>
         public int Save ()
         {
-            _cache.SyncDirty();
+            Cache.SyncDirty();
 
             int saved = 0;
-            IEnumerator<ChunkRef> en = _cache.GetDirtyEnumerator();
+            IEnumerator<ChunkRef> en = Cache.GetDirtyEnumerator();
             while (en.MoveNext()) {
                 ChunkRef chunk = en.Current;
 
@@ -486,7 +486,7 @@ namespace Substrate.Core
                 }
             }
 
-            _cache.ClearDirty();
+            Cache.ClearDirty();
             return saved;
         }
 
@@ -538,22 +538,22 @@ namespace Substrate.Core
 
         protected bool LocalBoundsCheck (int lcx, int lcz)
         {
-            return (lcx >= 0 && lcx < XDIM && lcz >= 0 && lcz < ZDIM);
+            return (lcx >= 0 && lcx < Kxdim && lcz >= 0 && lcz < Kzdim);
         }
 
         protected IRegion GetForeignRegion (int lcx, int lcz)
         {
-            return _regionMan.GetRegion(_rx + (lcx >> XLOG), _rz + (lcz >> ZLOG));
+            return RegionMan.GetRegion(Rx + (lcx >> Kxlog), Rz + (lcz >> Kzlog));
         }
 
         protected int ForeignX (int lcx)
         {
-            return (lcx + XDIM * 10000) & XMASK;
+            return (lcx + Kxdim * 10000) & Kxmask;
         }
 
         protected int ForeignZ (int lcz)
         {
-            return (lcz + ZDIM * 10000) & ZMASK;
+            return (lcz + Kzdim * 10000) & Kzmask;
         }
     }
 }

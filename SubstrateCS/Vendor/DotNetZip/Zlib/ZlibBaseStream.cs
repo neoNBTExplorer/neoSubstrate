@@ -407,7 +407,7 @@ namespace Ionic.Zlib
             if ((header[3] & 0x10) == 0x010)
                 _GzipComment = ReadZeroTerminatedString();
             if ((header[3] & 0x02) == 0x02)
-                Read(_buf1, 0, 1); // CRC16, ignore
+                ReadExactly(_buf1, 0, 1); // CRC16, ignore
 
             return totalBytesRead;
         }

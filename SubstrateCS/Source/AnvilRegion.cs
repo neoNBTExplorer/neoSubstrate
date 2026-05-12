@@ -17,14 +17,14 @@ namespace Substrate
         /// <inherits />
         public override string GetFileName ()
         {
-            return "r." + _rx + "." + _rz + ".mca";
+            return "r." + Rx + "." + Rz + ".mca";
 
         }
 
         /// <inherits />
         public override string GetFilePath ()
         {
-            return System.IO.Path.Combine(_regionMan.GetRegionPath(), GetFileName());
+            return System.IO.Path.Combine(RegionMan.GetRegionPath(), GetFileName());
         }
 
         /// <summary>

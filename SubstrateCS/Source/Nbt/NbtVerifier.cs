@@ -31,7 +31,7 @@ namespace Substrate.Nbt
     public class TagEventArgs : EventArgs
     {
         private string _tagName;
-        private TagNode _parent;
+        private TagNode _parent = null;
         private TagNode _tag;
         private SchemaNode _schema;
 

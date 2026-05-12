@@ -13,13 +13,13 @@ namespace Substrate
 
         protected override IRegion CreateRegionCore (int rx, int rz)
         {
-            return new BetaRegion(this, _chunkCache, rx, rz);
+            return new BetaRegion(this, ChunkCache, rx, rz);
         }
 
         protected override RegionFile CreateRegionFileCore (int rx, int rz)
         {
             string fp = "r." + rx + "." + rz + ".mcr";
-            return new RegionFile(Path.Combine(_regionPath, fp));
+            return new RegionFile(Path.Combine(RegionPath, fp));
         }
 
         protected override void DeleteRegionCore (IRegion region)

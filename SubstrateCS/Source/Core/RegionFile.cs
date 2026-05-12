@@ -151,7 +151,7 @@ namespace Substrate.Core
                     file.Seek(0, SeekOrigin.Begin);
                     for (int i = 0; i < SectorInts; ++i) {
                         byte[] offsetBytes = new byte[4];
-                        file.Read(offsetBytes, 0, 4);
+                        file.ReadExactly(offsetBytes, 0, 4);
 
                         if (BitConverter.IsLittleEndian) {
                             Array.Reverse(offsetBytes);
@@ -167,7 +167,7 @@ namespace Substrate.Core
                     }
                     for (int i = 0; i < SectorInts; ++i) {
                         byte[] modBytes = new byte[4];
-                        file.Read(modBytes, 0, 4);
+                        file.ReadExactly(modBytes, 0, 4);
 
                         if (BitConverter.IsLittleEndian) {
                             Array.Reverse(modBytes);
@@ -258,7 +258,7 @@ namespace Substrate.Core
 
                     file.Seek(sectorNumber * SectorBytes, SeekOrigin.Begin);
                     byte[] lengthBytes = new byte[4];
-                    file.Read(lengthBytes, 0, 4);
+                    file.ReadExactly(lengthBytes, 0, 4);
 
                     if (BitConverter.IsLittleEndian) {
                         Array.Reverse(lengthBytes);
@@ -273,14 +273,14 @@ namespace Substrate.Core
                     byte version = (byte)file.ReadByte();
                     if (version == VERSION_GZIP) {
                         byte[] data = new byte[length - 1];
-                        file.Read(data, 0, data.Length);
+                        file.ReadExactly(data, 0, data.Length);
                         Stream ret = new GZipStream(new MemoryStream(data), CompressionMode.Decompress);
 
                         return ret;
                     }
                     else if (version == VERSION_DEFLATE) {
                         byte[] data = new byte[length - 1];
-                        file.Read(data, 0, data.Length);
+                        file.ReadExactly(data, 0, data.Length);
 
                         Stream ret = new ZlibStream(new MemoryStream(data), CompressionMode.Decompress, true);
                         return ret;

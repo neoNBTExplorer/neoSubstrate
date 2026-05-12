@@ -171,7 +171,7 @@ namespace Substrate.Nbt
         private TagNode ReadShort ()
         {
             byte[] gzBytes = new byte[2];
-            _stream.Read(gzBytes, 0, 2);
+            _stream.ReadExactly(gzBytes, 0, 2);
 
             if (BitConverter.IsLittleEndian) {
                 Array.Reverse(gzBytes);
@@ -185,7 +185,7 @@ namespace Substrate.Nbt
         private TagNode ReadInt ()
         {
             byte[] gzBytes = new byte[4];
-            _stream.Read(gzBytes, 0, 4);
+            _stream.ReadExactly(gzBytes, 0, 4);
 
             if (BitConverter.IsLittleEndian) {
                 Array.Reverse(gzBytes);
@@ -199,7 +199,7 @@ namespace Substrate.Nbt
         private TagNode ReadLong ()
         {
             byte[] gzBytes = new byte[8];
-            _stream.Read(gzBytes, 0, 8);
+            _stream.ReadExactly(gzBytes, 0, 8);
 
             if (BitConverter.IsLittleEndian) {
                 Array.Reverse(gzBytes);
@@ -213,7 +213,7 @@ namespace Substrate.Nbt
         private TagNode ReadFloat ()
         {
             byte[] gzBytes = new byte[4];
-            _stream.Read(gzBytes, 0, 4);
+            _stream.ReadExactly(gzBytes, 0, 4);
 
             if (BitConverter.IsLittleEndian) {
                 Array.Reverse(gzBytes);
@@ -227,7 +227,7 @@ namespace Substrate.Nbt
         private TagNode ReadDouble ()
         {
             byte[] gzBytes = new byte[8];
-            _stream.Read(gzBytes, 0, 8);
+            _stream.ReadExactly(gzBytes, 0, 8);
 
             if (BitConverter.IsLittleEndian) {
                 Array.Reverse(gzBytes);
@@ -241,7 +241,7 @@ namespace Substrate.Nbt
         private TagNode ReadByteArray ()
         {
             byte[] lenBytes = new byte[4];
-            _stream.Read(lenBytes, 0, 4);
+            _stream.ReadExactly(lenBytes, 0, 4);
 
             if (BitConverter.IsLittleEndian) {
                 Array.Reverse(lenBytes);
@@ -253,7 +253,7 @@ namespace Substrate.Nbt
             }
 
             byte[] data = new byte[length];
-            _stream.Read(data, 0, length);
+            _stream.ReadExactly(data, 0, length);
 
             TagNodeByteArray val = new TagNodeByteArray(data);
 
@@ -263,7 +263,7 @@ namespace Substrate.Nbt
         private TagNode ReadString ()
         {
             byte[] lenBytes = new byte[2];
-            _stream.Read(lenBytes, 0, 2);
+            _stream.ReadExactly(lenBytes, 0, 2);
 
             if (BitConverter.IsLittleEndian) {
                 Array.Reverse(lenBytes);
@@ -275,7 +275,7 @@ namespace Substrate.Nbt
             }
 
             byte[] strBytes = new byte[len];
-            _stream.Read(strBytes, 0, len);
+            _stream.ReadExactly(strBytes, 0, len);
 
             System.Text.Encoding str = Encoding.UTF8;
 
@@ -297,7 +297,7 @@ namespace Substrate.Nbt
             }
 
             byte[] lenBytes = new byte[4];
-            _stream.Read(lenBytes, 0, 4);
+            _stream.ReadExactly(lenBytes, 0, 4);
 
             if (BitConverter.IsLittleEndian) {
                 Array.Reverse(lenBytes);
@@ -330,7 +330,7 @@ namespace Substrate.Nbt
         private TagNode ReadIntArray ()
         {
             byte[] lenBytes = new byte[4];
-            _stream.Read(lenBytes, 0, 4);
+            _stream.ReadExactly(lenBytes, 0, 4);
 
             if (BitConverter.IsLittleEndian) {
                 Array.Reverse(lenBytes);
@@ -344,7 +344,7 @@ namespace Substrate.Nbt
             int[] data = new int[length];
             byte[] buffer = new byte[4];
             for (int i = 0; i < length; i++) {
-                _stream.Read(buffer, 0, 4);
+                _stream.ReadExactly(buffer, 0, 4);
                 if (BitConverter.IsLittleEndian) {
                     Array.Reverse(buffer);
                 }
@@ -359,7 +359,7 @@ namespace Substrate.Nbt
         private TagNode ReadLongArray ()
         {
             byte[] lenBytes = new byte[4];
-            _stream.Read(lenBytes, 0, 4);
+            _stream.ReadExactly(lenBytes, 0, 4);
 
             if (BitConverter.IsLittleEndian) {
                 Array.Reverse(lenBytes);
@@ -373,7 +373,7 @@ namespace Substrate.Nbt
             long[] data = new long[length];
             byte[] buffer = new byte[8];
             for (int i = 0; i < length; i++) {
-                _stream.Read(buffer, 0, 8);
+                _stream.ReadExactly(buffer, 0, 8);
                 if (BitConverter.IsLittleEndian) {
                     Array.Reverse(buffer);
                 }
@@ -388,7 +388,7 @@ namespace Substrate.Nbt
         private TagNode ReadShortArray ()
         {
             byte[] lenBytes = new byte[4];
-            _stream.Read(lenBytes, 0, 4);
+            _stream.ReadExactly(lenBytes, 0, 4);
 
             if (BitConverter.IsLittleEndian) {
                 Array.Reverse(lenBytes);
@@ -402,7 +402,7 @@ namespace Substrate.Nbt
             short[] data = new short[length];
             byte[] buffer = new byte[2];
             for (int i = 0; i < length; i++) {
-                _stream.Read(buffer, 0, 2);
+                _stream.ReadExactly(buffer, 0, 2);
                 if (BitConverter.IsLittleEndian) {
                     Array.Reverse(buffer);
                 }
