@@ -6,4 +6,4 @@
 >
 > **Source repository**: https://github.com/minecraft-dotnet/Substrate
 >
-> See [LICENSES/Substrate-Original.txt](./LICENSES/NBTExplorer-Original.txt) for the full license text and attribution.
+> See [LICENSES/Substrate-Original.txt](./LICENSES/Substrate-Original.txt) for the full license text and attribution.
