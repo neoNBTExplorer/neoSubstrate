@@ -1,89 +1,71 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Substrate.Nbt;
 
-namespace Substrate.TileEntities
+namespace Substrate.TileEntities;
+
+public class TileEntityControl : TileEntity
 {
-    using Substrate.Nbt;
-
-    public class TileEntityControl : TileEntity
+    public static readonly SchemaNodeCompound ControlSchema = Schema.MergeInto(new SchemaNodeCompound("")
     {
-        public static readonly SchemaNodeCompound ControlSchema = TileEntity.Schema.MergeInto(new SchemaNodeCompound("")
-        {
-            new SchemaNodeString("id", TypeId),
-            new SchemaNodeScaler("Command", TagType.TAG_STRING),
-        });
+        new SchemaNodeString("id", TypeId),
+        new SchemaNodeScaler("Command", TagType.TAG_STRING)
+    });
 
-        public static string TypeId
-        {
-            get { return "Control"; }
-        }
-
-        private string _command;
-
-        public string Command
-        {
-            get { return _command; }
-            set { _command = value; }
-        }
-
-        protected TileEntityControl (string id)
-            : base(id)
-        {
-        }
-
-        public TileEntityControl ()
-            : this(TypeId)
-        {
-        }
-
-        public TileEntityControl (TileEntity te)
-            : base(te)
-        {
-            TileEntityControl tes = te as TileEntityControl;
-            if (tes != null) {
-                _command = tes._command;
-            }
-        }
-
-
-        #region ICopyable<TileEntity> Members
-
-        public override TileEntity Copy ()
-        {
-            return new TileEntityControl(this);
-        }
-
-        #endregion
-
-
-        #region INBTObject<TileEntity> Members
-
-        public override TileEntity LoadTree (TagNode tree)
-        {
-            TagNodeCompound ctree = tree as TagNodeCompound;
-            if (ctree == null || base.LoadTree(tree) == null) {
-                return null;
-            }
-
-            _command = ctree["Command"].ToTagString();
-
-            return this;
-        }
-
-        public override TagNode BuildTree ()
-        {
-            TagNodeCompound tree = base.BuildTree() as TagNodeCompound;
-            tree["Command"] = new TagNodeString(_command);
-
-            return tree;
-        }
-
-        public override bool ValidateTree (TagNode tree)
-        {
-            return new NbtVerifier(tree, ControlSchema).Verify();
-        }
-
-        #endregion
+    protected TileEntityControl(string id)
+        : base(id)
+    {
     }
+
+    public TileEntityControl()
+        : this(TypeId)
+    {
+    }
+
+    public TileEntityControl(TileEntity te)
+        : base(te)
+    {
+        var tes = te as TileEntityControl;
+        if (tes != null) Command = tes.Command;
+    }
+
+    public static string TypeId => "Control";
+
+    public string Command { get; set; }
+
+
+    #region ICopyable<TileEntity> Members
+
+    public override TileEntity Copy()
+    {
+        return new TileEntityControl(this);
+    }
+
+    #endregion
+
+
+    #region INBTObject<TileEntity> Members
+
+    public override TileEntity LoadTree(TagNode tree)
+    {
+        var ctree = tree as TagNodeCompound;
+        if (ctree == null || base.LoadTree(tree) == null) return null;
+
+        Command = ctree["Command"].ToTagString();
+
+        return this;
+    }
+
+    public override TagNode BuildTree()
+    {
+        var tree = base.BuildTree() as TagNodeCompound;
+        tree["Command"] = new TagNodeString(Command);
+
+        return tree;
+    }
+
+    public override bool ValidateTree(TagNode tree)
+    {
+        return new NbtVerifier(tree, ControlSchema).Verify();
+    }
+
+    #endregion
 }

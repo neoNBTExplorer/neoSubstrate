@@ -1,56 +1,48 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Substrate.Nbt;
 
-namespace Substrate.Entities
+namespace Substrate.Entities;
+
+public class EntityMonster : EntityMob
 {
-    using Substrate.Nbt;
-
-    public class EntityMonster : EntityMob
+    public static readonly SchemaNodeCompound MonsterSchema = MobSchema.MergeInto(new SchemaNodeCompound("")
     {
-        public static readonly SchemaNodeCompound MonsterSchema = MobSchema.MergeInto(new SchemaNodeCompound("")
-        {
-            new SchemaNodeString("id", TypeId),
-        });
+        new SchemaNodeString("id", TypeId)
+    });
 
-        public static new string TypeId
-        {
-            get { return "Monster"; }
-        }
-
-        protected EntityMonster (string id)
-            : base(id)
-        {
-        }
-
-        public EntityMonster ()
-            : this(TypeId)
-        {
-        }
-
-        public EntityMonster (TypedEntity e)
-            : base(e)
-        {
-        }
-
-
-        #region INBTObject<Entity> Members
-
-        public override bool ValidateTree (TagNode tree)
-        {
-            return new NbtVerifier(tree, MonsterSchema).Verify();
-        }
-
-        #endregion
-
-
-        #region ICopyable<Entity> Members
-
-        public override TypedEntity Copy ()
-        {
-            return new EntityMonster(this);
-        }
-
-        #endregion
+    protected EntityMonster(string id)
+        : base(id)
+    {
     }
+
+    public EntityMonster()
+        : this(TypeId)
+    {
+    }
+
+    public EntityMonster(TypedEntity e)
+        : base(e)
+    {
+    }
+
+    public new static string TypeId => "Monster";
+
+
+    #region INBTObject<Entity> Members
+
+    public override bool ValidateTree(TagNode tree)
+    {
+        return new NbtVerifier(tree, MonsterSchema).Verify();
+    }
+
+    #endregion
+
+
+    #region ICopyable<Entity> Members
+
+    public override TypedEntity Copy()
+    {
+        return new EntityMonster(this);
+    }
+
+    #endregion
 }

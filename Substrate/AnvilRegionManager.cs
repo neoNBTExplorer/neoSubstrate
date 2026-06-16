@@ -2,42 +2,38 @@
 using System.IO;
 using Substrate.Core;
 
-namespace Substrate
+namespace Substrate;
+
+public class AnvilRegionManager : RegionManager
 {
-    public class AnvilRegionManager : RegionManager
+    public AnvilRegionManager(string regionDir, ChunkCache cache)
+        : base(regionDir, cache)
     {
-        public AnvilRegionManager (string regionDir, ChunkCache cache)
-            : base(regionDir, cache)
-        {
-        }
+    }
 
-        protected override IRegion CreateRegionCore (int rx, int rz)
-        {
-            return new AnvilRegion(this, ChunkCache, rx, rz);
-        }
+    protected override IRegion CreateRegionCore(int rx, int rz)
+    {
+        return new AnvilRegion(this, ChunkCache, rx, rz);
+    }
 
-        protected override RegionFile CreateRegionFileCore (int rx, int rz)
-        {
-            string fp = "r." + rx + "." + rz + ".mca";
-            return new RegionFile(Path.Combine(RegionPath, fp));
-        }
+    protected override RegionFile CreateRegionFileCore(int rx, int rz)
+    {
+        var fp = "r." + rx + "." + rz + ".mca";
+        return new RegionFile(Path.Combine(RegionPath, fp));
+    }
 
-        protected override void DeleteRegionCore (IRegion region)
-        {
-            AnvilRegion r = region as AnvilRegion;
-            if (r != null) {
-                r.Dispose();
-            }
-        }
+    protected override void DeleteRegionCore(IRegion region)
+    {
+        var r = region as AnvilRegion;
+        if (r != null) r.Dispose();
+    }
 
-        public override IRegion GetRegion (string filename)
-        {
-            int rx, rz;
-            if (!AnvilRegion.ParseFileName(filename, out rx, out rz)) {
-                throw new ArgumentException("Malformed region file name: " + filename, "filename");
-            }
+    public override IRegion GetRegion(string filename)
+    {
+        int rx, rz;
+        if (!AnvilRegion.ParseFileName(filename, out rx, out rz))
+            throw new ArgumentException("Malformed region file name: " + filename, "filename");
 
-            return GetRegion(rx, rz);
-        }
+        return GetRegion(rx, rz);
     }
 }

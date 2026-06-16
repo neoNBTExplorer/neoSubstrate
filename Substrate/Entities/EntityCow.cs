@@ -1,56 +1,48 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Substrate.Nbt;
 
-namespace Substrate.Entities
+namespace Substrate.Entities;
+
+public class EntityCow : EntityMob
 {
-    using Substrate.Nbt;
-
-    public class EntityCow : EntityMob
+    public static readonly SchemaNodeCompound CowSchema = MobSchema.MergeInto(new SchemaNodeCompound("")
     {
-        public static readonly SchemaNodeCompound CowSchema = MobSchema.MergeInto(new SchemaNodeCompound("")
-        {
-            new SchemaNodeString("id", TypeId),
-        });
+        new SchemaNodeString("id", TypeId)
+    });
 
-        public static new string TypeId
-        {
-            get { return "Cow"; }
-        }
-
-        protected EntityCow (string id)
-            : base(id)
-        {
-        }
-
-        public EntityCow ()
-            : this(TypeId)
-        {
-        }
-
-        public EntityCow (TypedEntity e)
-            : base(e)
-        {
-        }
-
-
-        #region INBTObject<Entity> Members
-
-        public override bool ValidateTree (TagNode tree)
-        {
-            return new NbtVerifier(tree, CowSchema).Verify();
-        }
-
-        #endregion
-
-
-        #region ICopyable<Entity> Members
-
-        public override TypedEntity Copy ()
-        {
-            return new EntityCow(this);
-        }
-
-        #endregion
+    protected EntityCow(string id)
+        : base(id)
+    {
     }
+
+    public EntityCow()
+        : this(TypeId)
+    {
+    }
+
+    public EntityCow(TypedEntity e)
+        : base(e)
+    {
+    }
+
+    public new static string TypeId => "Cow";
+
+
+    #region INBTObject<Entity> Members
+
+    public override bool ValidateTree(TagNode tree)
+    {
+        return new NbtVerifier(tree, CowSchema).Verify();
+    }
+
+    #endregion
+
+
+    #region ICopyable<Entity> Members
+
+    public override TypedEntity Copy()
+    {
+        return new EntityCow(this);
+    }
+
+    #endregion
 }

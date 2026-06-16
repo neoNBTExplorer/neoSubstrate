@@ -1,37 +1,38 @@
 ﻿using System;
-using System.Runtime.Serialization;
 
-namespace Substrate
+namespace Substrate;
+
+/// <summary>
+///     The exception that is thrown when IO errors occur during level management operations.
+/// </summary>
+[Serializable]
+public class LevelIOException : SubstrateException
 {
     /// <summary>
-    /// The exception that is thrown when IO errors occur during level management operations.
+    ///     Initializes a new instance of the <see cref="LevelIOException" /> class.
     /// </summary>
-    [Serializable]
-    public class LevelIOException : SubstrateException
+    public LevelIOException()
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="LevelIOException"/> class.
-        /// </summary>
-        public LevelIOException ()
-            : base()
-        { }
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="LevelIOException"/> class with a custom error message.
-        /// </summary>
-        /// <param name="message">A custom error message.</param>
-        public LevelIOException (string message)
-            : base(message)
-        { }
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="LevelIOException" /> class with a custom error message.
+    /// </summary>
+    /// <param name="message">A custom error message.</param>
+    public LevelIOException(string message)
+        : base(message)
+    {
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="LevelIOException"/> class with a custom error message and a reference to
-        /// an InnerException representing the original cause of the exception.
-        /// </summary>
-        /// <param name="message">A custom error message.</param>
-        /// <param name="innerException">A reference to the original exception that caused the error.</param>
-        public LevelIOException (string message, Exception innerException)
-            : base(message, innerException)
-        { }
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="LevelIOException" /> class with a custom error message and a reference
+    ///     to
+    ///     an InnerException representing the original cause of the exception.
+    /// </summary>
+    /// <param name="message">A custom error message.</param>
+    /// <param name="innerException">A reference to the original exception that caused the error.</param>
+    public LevelIOException(string message, Exception innerException)
+        : base(message, innerException)
+    {
     }
 }

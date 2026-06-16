@@ -1,123 +1,110 @@
 ﻿using System;
-using System.Collections.Generic;
-using Substrate.Nbt;
 using System.IO;
 using Substrate.Core;
+using Substrate.Nbt;
 
-namespace Substrate.Data
+namespace Substrate.Data;
+
+public class BetaDataManager : DataManager, INbtObject<BetaDataManager>
 {
-    public class BetaDataManager : DataManager, INbtObject<BetaDataManager>
+    private static readonly SchemaNodeCompound _schema = new()
     {
-        private static SchemaNodeCompound _schema = new SchemaNodeCompound()
+        new SchemaNodeScaler("map", TagType.TAG_SHORT)
+    };
+
+    private readonly NbtWorld _world;
+
+    private short _mapId;
+
+    private TagNodeCompound _source;
+
+    public BetaDataManager(NbtWorld world)
+    {
+        _world = world;
+
+        Maps = new MapManager(_world);
+    }
+
+    public override int CurrentMapId
+    {
+        get => _mapId;
+        set => _mapId = (short)value;
+    }
+
+    public new MapManager Maps { get; }
+
+    protected override IMapManager GetMapManager()
+    {
+        return Maps;
+    }
+
+    public override bool Save()
+    {
+        if (_world == null) return false;
+
+        try
         {
-            new SchemaNodeScaler("map", TagType.TAG_SHORT),
-        };
+            var path = Path.Combine(_world.Path, _world.DataDirectory);
+            var nf = new NBTFile(Path.Combine(path, "idcounts.dat"));
 
-        private TagNodeCompound _source;
-
-        private NbtWorld _world;
-
-        private short _mapId;
-
-        private MapManager _maps;
-
-        public BetaDataManager (NbtWorld world)
-        {
-            _world = world;
-
-            _maps = new MapManager(_world);
-        }
-
-        public override int CurrentMapId
-        {
-            get { return _mapId; }
-            set { _mapId = (short)value; }
-        }
-
-        public new MapManager Maps
-        {
-            get { return _maps; }
-        }
-
-        protected override IMapManager GetMapManager ()
-        {
-            return _maps;
-        }
-
-        public override bool Save ()
-        {
-            if (_world == null) {
-                return false;
-            }
-
-            try {
-                string path = Path.Combine(_world.Path, _world.DataDirectory);
-                NBTFile nf = new NBTFile(Path.Combine(path, "idcounts.dat"));
-
-                using (Stream zipstr = nf.GetDataOutputStream(CompressionType.None))
+            using (var zipstr = nf.GetDataOutputStream(CompressionType.None))
+            {
+                if (zipstr == null)
                 {
-                    if (zipstr == null)
-                    {
-                        NbtIOException nex = new NbtIOException("Failed to initialize uncompressed NBT stream for output");
-                        nex.Data["DataManager"] = this;
-                        throw nex;
-                    }
-
-                    new NbtTree(BuildTree() as TagNodeCompound).WriteTo(zipstr);
+                    var nex = new NbtIOException("Failed to initialize uncompressed NBT stream for output");
+                    nex.Data["DataManager"] = this;
+                    throw nex;
                 }
 
-                return true;
+                new NbtTree(BuildTree() as TagNodeCompound).WriteTo(zipstr);
             }
-            catch (Exception ex) {
-                Exception lex = new Exception("Could not save idcounts.dat file.", ex);
-                lex.Data["DataManager"] = this;
-                throw lex;
-            }
+
+            return true;
         }
-
-        #region INBTObject<DataManager>
-
-        public virtual BetaDataManager LoadTree (TagNode tree)
+        catch (Exception ex)
         {
-            TagNodeCompound ctree = tree as TagNodeCompound;
-            if (ctree == null) {
-                return null;
-            }
-
-            _mapId = ctree["map"].ToTagShort();
-
-            _source = ctree.Copy() as TagNodeCompound;
-
-            return this;
+            var lex = new Exception("Could not save idcounts.dat file.", ex);
+            lex.Data["DataManager"] = this;
+            throw lex;
         }
-
-        public virtual BetaDataManager LoadTreeSafe (TagNode tree)
-        {
-            if (!ValidateTree(tree)) {
-                return null;
-            }
-
-            return LoadTree(tree);
-        }
-
-        public virtual TagNode BuildTree ()
-        {
-            TagNodeCompound tree = new TagNodeCompound();
-
-            tree["map"] = new TagNodeLong(_mapId);
-
-            if (_source != null) {
-                tree.MergeFrom(_source);
-            }
-
-            return tree;
-        }
-
-        public virtual bool ValidateTree (TagNode tree)
-        {
-            return new NbtVerifier(tree, _schema).Verify();
-        }
-
-        #endregion
     }
+
+    #region INBTObject<DataManager>
+
+    public virtual BetaDataManager LoadTree(TagNode tree)
+    {
+        var ctree = tree as TagNodeCompound;
+        if (ctree == null) return null;
+
+        _mapId = ctree["map"].ToTagShort();
+
+        _source = ctree.Copy() as TagNodeCompound;
+
+        return this;
+    }
+
+    public virtual BetaDataManager LoadTreeSafe(TagNode tree)
+    {
+        if (!ValidateTree(tree)) return null;
+
+        return LoadTree(tree);
+    }
+
+    public virtual TagNode BuildTree()
+    {
+        var tree = new TagNodeCompound();
+
+        tree["map"] = new TagNodeLong(_mapId);
+
+        if (_source != null) tree.MergeFrom(_source);
+
+        return tree;
+    }
+
+    public virtual bool ValidateTree(TagNode tree)
+    {
+        return new NbtVerifier(tree, _schema).Verify();
+    }
+
+    #endregion
 }

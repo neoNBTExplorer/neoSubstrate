@@ -1,271 +1,252 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using Substrate.Nbt;
 
-namespace Substrate
+namespace Substrate;
+
+/// <summary>
+///     Functions to query and manage a collection of entities.
+/// </summary>
+public class EntityCollection : IEnumerable<TypedEntity>
 {
+    private readonly TagNodeList _entities;
+
     /// <summary>
-    /// Functions to query and manage a collection of entities.
+    ///     Creates a new <see cref="EntityCollection" /> around a <see cref="TagNodeList" /> containing Entity nodes.
     /// </summary>
-    public class EntityCollection : IEnumerable<TypedEntity>
+    /// <param name="entities">A <see cref="TagNodeList" /> containing Entity nodes.</param>
+    public EntityCollection(TagNodeList entities)
     {
-        private TagNodeList _entities;
+        _entities = entities;
+    }
 
-        private bool _dirty;
+    /// <summary>
+    ///     Gets or sets a value indicating whether this collection contains unsaved changes.
+    /// </summary>
+    public bool IsDirty { get; set; }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether this collection contains unsaved changes.
-        /// </summary>
-        public bool IsDirty
+    #region IEnumerable<Entity> Members
+
+    /// <summary>
+    ///     Returns an enumerator that iterates through all entities.
+    /// </summary>
+    /// <returns>An <see cref="Enumerator" /> for this object.</returns>
+    public IEnumerator<TypedEntity> GetEnumerator()
+    {
+        return new Enumerator(_entities);
+    }
+
+    #endregion
+
+    #region IEnumerable Members
+
+    /// <summary>
+    ///     Returns an enumerator that iterates through all entities.
+    /// </summary>
+    /// <returns>An <see cref="Enumerator" /> for this object.</returns>
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return new Enumerator(_entities);
+    }
+
+    #endregion
+
+    /// <summary>
+    ///     Gets a list of all entities in the collection that match a given id (type).
+    /// </summary>
+    /// <param name="id">The id (type) of entities that should be returned.</param>
+    /// <returns>A list of <see cref="TypedEntity" /> objects matching the given id (type).</returns>
+    public List<TypedEntity> FindAll(string id)
+    {
+        var set = new List<TypedEntity>();
+
+        foreach (TagNodeCompound ent in _entities)
         {
-            get { return _dirty; }
-            set { _dirty = value; }
+            TagNode eid;
+            if (!ent.TryGetValue("id", out eid)) continue;
+
+            if (eid.ToTagString().Data != id) continue;
+
+            var obj = EntityFactory.Create(ent);
+            if (obj != null) set.Add(obj);
         }
 
-        /// <summary>
-        /// Creates a new <see cref="EntityCollection"/> around a <see cref="TagNodeList"/> containing Entity nodes.
-        /// </summary>
-        /// <param name="entities">A <see cref="TagNodeList"/> containing Entity nodes.</param>
-        public EntityCollection (TagNodeList entities)
+        return set;
+    }
+
+    /// <summary>
+    ///     Gets a list of all entities in the collection that match a given condition.
+    /// </summary>
+    /// <param name="match">A <see cref="Predicate{T}" /> defining the matching condition.</param>
+    /// <returns>A list of <see cref="TypedEntity" /> objects matching the given condition.</returns>
+    public List<TypedEntity> FindAll(Predicate<TypedEntity> match)
+    {
+        var set = new List<TypedEntity>();
+
+        foreach (TagNodeCompound ent in _entities)
         {
-            _entities = entities;
+            var obj = EntityFactory.Create(ent);
+            if (obj == null) continue;
+
+            if (match(obj)) set.Add(obj);
         }
 
-        /// <summary>
-        /// Gets a list of all entities in the collection that match a given id (type).
-        /// </summary>
-        /// <param name="id">The id (type) of entities that should be returned.</param>
-        /// <returns>A list of <see cref="TypedEntity"/> objects matching the given id (type).</returns>
-        public List<TypedEntity> FindAll (string id)
+        return set;
+    }
+
+    /// <summary>
+    ///     Adds a <see cref="TypedEntity" /> to the collection.
+    /// </summary>
+    /// <param name="ent">The <see cref="TypedEntity" /> object to add.</param>
+    /// <remarks>
+    ///     It is up to the developer to ensure that the <see cref="TypedEntity" /> being added to the collection has a
+    ///     position that
+    ///     is within acceptable range of the collection.  <see cref="EntityCollection" /> transparently back other objects
+    ///     such as
+    ///     <see cref="IChunk" /> objects, which have a well-defined position in global space.  The
+    ///     <see cref="EntityCollection" /> itself has
+    ///     no concept of position and will not enforce constraints on the positions of <see cref="TypedEntity" /> objects
+    ///     being added.
+    /// </remarks>
+    public void Add(TypedEntity ent)
+    {
+        _entities.Add(ent.BuildTree());
+        IsDirty = true;
+    }
+
+    /// <summary>
+    ///     Removes all entities matching the given id (type) from the collection.
+    /// </summary>
+    /// <param name="id">The id (type) of entities that should be removed.</param>
+    /// <returns>A count of the number of entities that were removed.</returns>
+    public int RemoveAll(string id)
+    {
+        var rem = _entities.RemoveAll(val =>
         {
-            List<TypedEntity> set = new List<TypedEntity>();
+            var cval = val as TagNodeCompound;
+            if (cval == null) return false;
 
-            foreach (TagNodeCompound ent in _entities) {
-                TagNode eid;
-                if (!ent.TryGetValue("id", out eid)) {
-                    continue;
-                }
+            TagNode sval;
+            if (!cval.TryGetValue("id", out sval)) return false;
 
-                if (eid.ToTagString().Data != id) {
-                    continue;
-                }
+            return sval.ToTagString().Data == id;
+        });
 
-                TypedEntity obj = EntityFactory.Create(ent);
-                if (obj != null) {
-                    set.Add(obj);
-                }
-            }
+        if (rem > 0) IsDirty = true;
 
-            return set;
+        return rem;
+    }
+
+    /// <summary>
+    ///     Removes all entities matching the given condition from the collection.
+    /// </summary>
+    /// <param name="match">A <see cref="Predicate{T}" /> defining the matching condition.</param>
+    /// <returns>A count of the number of entities that were removed.</returns>
+    public int RemoveAll(Predicate<TypedEntity> match)
+    {
+        var rem = _entities.RemoveAll(val =>
+        {
+            var cval = val as TagNodeCompound;
+            if (cval == null) return false;
+
+            var obj = EntityFactory.Create(cval);
+            if (obj == null) return false;
+
+            return match(obj);
+        });
+
+        if (rem > 0) IsDirty = true;
+
+        return rem;
+    }
+
+    /// <summary>
+    ///     Enumerates the entities within an <see cref="EntityCollection" />.
+    /// </summary>
+    private struct Enumerator : IEnumerator<TypedEntity>
+    {
+        private readonly IEnumerator<TagNode> _enum;
+
+        private bool _next;
+        private TypedEntity _cur;
+
+        internal Enumerator(TagNodeList entities)
+        {
+            _enum = entities.GetEnumerator();
+            _cur = null;
+            _next = false;
         }
 
-        /// <summary>
-        /// Gets a list of all entities in the collection that match a given condition.
-        /// </summary>
-        /// <param name="match">A <see cref="Predicate{T}"/> defining the matching condition.</param>
-        /// <returns>A list of <see cref="TypedEntity"/> objects matching the given condition.</returns>
-        public List<TypedEntity> FindAll (Predicate<TypedEntity> match)
-        {
-            List<TypedEntity> set = new List<TypedEntity>();
-
-            foreach (TagNodeCompound ent in _entities) {
-                TypedEntity obj = EntityFactory.Create(ent);
-                if (obj == null) {
-                    continue;
-                }
-
-                if (match(obj)) {
-                    set.Add(obj);
-                }
-            }
-
-            return set;
-        }
+        #region IEnumerator<Entity> Members
 
         /// <summary>
-        /// Adds a <see cref="TypedEntity"/> to the collection.
+        ///     Gets the <see cref="TypedEntity" /> at the current position of the enumerator.
         /// </summary>
-        /// <param name="ent">The <see cref="TypedEntity"/> object to add.</param>
-        /// <remarks>It is up to the developer to ensure that the <see cref="TypedEntity"/> being added to the collection has a position that
-        /// is within acceptable range of the collection.  <see cref="EntityCollection"/> transparently back other objects such as 
-        /// <see cref="IChunk"/> objects, which have a well-defined position in global space.  The <see cref="EntityCollection"/> itself has
-        /// no concept of position and will not enforce constraints on the positions of <see cref="TypedEntity"/> objects being added.</remarks>
-        public void Add (TypedEntity ent)
+        public TypedEntity Current
         {
-            _entities.Add(ent.BuildTree());
-            _dirty = true;
-        }
-
-        /// <summary>
-        /// Removes all entities matching the given id (type) from the collection.
-        /// </summary>
-        /// <param name="id">The id (type) of entities that should be removed.</param>
-        /// <returns>A count of the number of entities that were removed.</returns>
-        public int RemoveAll (string id)
-        {
-            int rem = _entities.RemoveAll(val =>
+            get
             {
-                TagNodeCompound cval = val as TagNodeCompound;
-                if (cval == null) {
-                    return false;
-                }
-
-                TagNode sval;
-                if (!cval.TryGetValue("id", out sval)) {
-                    return false;
-                }
-
-                return (sval.ToTagString().Data == id);
-            });
-
-            if (rem > 0) {
-                _dirty = true;
+                if (!_next) throw new InvalidOperationException();
+                return _cur;
             }
-            
-            return rem;
-        }
-
-        /// <summary>
-        /// Removes all entities matching the given condition from the collection.
-        /// </summary>
-        /// <param name="match">A <see cref="Predicate{T}"/> defining the matching condition.</param>
-        /// <returns>A count of the number of entities that were removed.</returns>
-        public int RemoveAll (Predicate<TypedEntity> match)
-        {
-            int rem = _entities.RemoveAll(val =>
-            {
-                TagNodeCompound cval = val as TagNodeCompound;
-                if (cval == null) {
-                    return false;
-                }
-
-                TypedEntity obj = EntityFactory.Create(cval);
-                if (obj == null) {
-                    return false;
-                }
-
-                return match(obj);
-            });
-
-            if (rem > 0) {
-                _dirty = true;
-            }
-
-            return rem;
-        }
-
-        #region IEnumerable<Entity> Members
-
-        /// <summary>
-        /// Returns an enumerator that iterates through all entities.
-        /// </summary>
-        /// <returns>An <see cref="Enumerator"/> for this object.</returns>
-        public IEnumerator<TypedEntity> GetEnumerator ()
-        {
-            return new Enumerator(_entities);
         }
 
         #endregion
 
-        #region IEnumerable Members
+        #region IDisposable Members
 
         /// <summary>
-        /// Returns an enumerator that iterates through all entities.
+        ///     Releases all resources used by the <see cref="Enumerator" />.
         /// </summary>
-        /// <returns>An <see cref="Enumerator"/> for this object.</returns>
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
+        public void Dispose()
         {
-            return new Enumerator(_entities);
         }
 
         #endregion
 
+        #region IEnumerator Members
+
         /// <summary>
-        /// Enumerates the entities within an <see cref="EntityCollection"/>.
+        ///     Gets the <see cref="TypedEntity" /> at the current position of the enumerator.
         /// </summary>
-        private struct Enumerator : IEnumerator<TypedEntity>
+        object IEnumerator.Current => Current;
+
+        /// <summary>
+        ///     Advances the enumerator to the next <see cref="TypedEntity" /> in the <see cref="EntityCollection" />.
+        /// </summary>
+        /// <returns>
+        ///     True if the enumerator was successfully advanced to the next position; false if the enumerator advanced past
+        ///     the end of the collection.
+        /// </returns>
+        public bool MoveNext()
         {
-            private IEnumerator<TagNode> _enum;
-
-            private bool _next;
-            private TypedEntity _cur;
-
-            internal Enumerator (TagNodeList entities)
+            if (!_enum.MoveNext())
             {
-                _enum = entities.GetEnumerator();
-                _cur = null;
                 _next = false;
+                return false;
             }
 
-            #region IEnumerator<Entity> Members
+            _cur = EntityFactory.Create(_enum.Current.ToTagCompound());
+            if (_cur == null)
+                _cur = EntityFactory.CreateGeneric(_enum.Current.ToTagCompound());
 
-            /// <summary>
-            /// Gets the <see cref="TypedEntity"/> at the current position of the enumerator.
-            /// </summary>
-            public TypedEntity Current
-            {
-                get 
-                {
-                    if (_next == false) {
-                        throw new InvalidOperationException();
-                    } 
-                    return _cur;
-                }
-            }
+            _next = true;
 
-            #endregion
-
-            #region IDisposable Members
-
-            /// <summary>
-            /// Releases all resources used by the <see cref="Enumerator"/>.
-            /// </summary>
-            public void Dispose () { }
-
-            #endregion
-
-            #region IEnumerator Members
-
-            /// <summary>
-            /// Gets the <see cref="TypedEntity"/> at the current position of the enumerator.
-            /// </summary>
-            object System.Collections.IEnumerator.Current
-            {
-                get { return Current; }
-            }
-
-            /// <summary>
-            /// Advances the enumerator to the next <see cref="TypedEntity"/> in the <see cref="EntityCollection"/>.
-            /// </summary>
-            /// <returns>True if the enumerator was successfully advanced to the next position; false if the enumerator advanced past the end of the collection.</returns>
-            public bool MoveNext ()
-            {
-                if (!_enum.MoveNext()) {
-                    _next = false;
-                    return false;
-                }
-
-                _cur = EntityFactory.Create(_enum.Current.ToTagCompound());
-                if (_cur == null)
-                    _cur = EntityFactory.CreateGeneric(_enum.Current.ToTagCompound());
-
-                _next = true;
-
-                return true;
-            }
-
-            /// <summary>
-            /// Sets the enumerator to its initial position, which is before the first <see cref="TypedEntity"/> in the collection.
-            /// </summary>
-            void System.Collections.IEnumerator.Reset ()
-            {
-                _cur = null;
-                _next = false;
-                _enum.Reset();
-            }
-
-            #endregion
+            return true;
         }
+
+        /// <summary>
+        ///     Sets the enumerator to its initial position, which is before the first <see cref="TypedEntity" /> in the
+        ///     collection.
+        /// </summary>
+        void IEnumerator.Reset()
+        {
+            _cur = null;
+            _next = false;
+            _enum.Reset();
+        }
+
+        #endregion
     }
 }

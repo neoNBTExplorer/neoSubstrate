@@ -1,255 +1,199 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 
-namespace Substrate.Core
+namespace Substrate.Core;
+
+public class NibbleArray : IDataArray, ICopyable<NibbleArray>
 {
-
-    public class NibbleArray : IDataArray, ICopyable<NibbleArray>
+    public NibbleArray(int length)
     {
-        private readonly byte[] _data = null;
-
-        public NibbleArray (int length)
-        {
-            _data = new byte[(int)Math.Ceiling(length / 2.0)];
-        }
-
-        public NibbleArray (byte[] data)
-        {
-            _data = data;
-        }
-
-        public int this[int index]
-        {
-            get
-            {
-                int subs = index >> 1;
-                if ((index & 1) == 0)
-                {
-                    return (byte)(_data[subs] & 0x0F);
-                }
-                else
-                {
-                    return (byte)((_data[subs] >> 4) & 0x0F);
-                }
-            }
-
-            set
-            {
-                int subs = index >> 1;
-                if ((index & 1) == 0)
-                {
-                    _data[subs] = (byte)((_data[subs] & 0xF0) | (value & 0x0F));
-                }
-                else
-                {
-                    _data[subs] = (byte)((_data[subs] & 0x0F) | ((value & 0x0F) << 4));
-                }
-            }
-        }
-
-        public int Length
-        {
-            get { return _data.Length << 1; }
-        }
-
-        public int DataWidth
-        {
-            get { return 4; }
-        }
-
-        protected byte[] Data
-        {
-            get { return _data; }
-        }
-
-        public void Clear ()
-        {
-            for (int i = 0; i < _data.Length; i++)
-            {
-                _data[i] = 0;
-            }
-        }
-
-        #region ICopyable<NibbleArray> Members
-
-        public virtual NibbleArray Copy ()
-        {
-            byte[] data = new byte[_data.Length];
-            _data.CopyTo(data, 0);
-
-            return new NibbleArray(data);
-        }
-
-        #endregion
+        Data = new byte[(int)Math.Ceiling(length / 2.0)];
     }
 
-    public sealed class XZYNibbleArray : NibbleArray, IDataArray3
+    public NibbleArray(byte[] data)
     {
-        private readonly int _xdim;
-        private readonly int _ydim;
-        private readonly int _zdim;
-
-        public XZYNibbleArray (int xdim, int ydim, int zdim)
-            : base(xdim * ydim * zdim)
-        {
-            _xdim = xdim;
-            _ydim = ydim;
-            _zdim = zdim;
-        }
-
-        public XZYNibbleArray (int xdim, int ydim, int zdim, byte[] data)
-            : base(data)
-        {
-            _xdim = xdim;
-            _ydim = ydim;
-            _zdim = zdim;
-
-            if (xdim * ydim * zdim != data.Length * 2)
-            {
-                throw new ArgumentException("Product of dimensions must equal half length of raw data");
-            }
-        }
-
-        public int this[int x, int y, int z]
-        {
-            get
-            {
-                int index = _ydim * (x * _zdim + z) + y;
-                return this[index];
-            }
-
-            set
-            {
-                int index = _ydim * (x * _zdim + z) + y;
-                this[index] = value;
-            }
-        }
-
-        public int XDim
-        {
-            get { return _xdim; }
-        }
-
-        public int YDim
-        {
-            get { return _ydim; }
-        }
-
-        public int ZDim
-        {
-            get { return _zdim; }
-        }
-
-        public int GetIndex (int x, int y, int z)
-        {
-            return _ydim * (x * _zdim + z) + y;
-        }
-
-        public void GetMultiIndex (int index, out int x, out int y, out int z)
-        {
-            int yzdim = _ydim * _zdim;
-            x = index / yzdim;
-
-            int zy = index - (x * yzdim);
-            z = zy / _ydim;
-            y = zy - (z * _ydim);
-        }
-
-        #region ICopyable<NibbleArray> Members
-
-        public override NibbleArray Copy ()
-        {
-            byte[] data = new byte[Data.Length];
-            Data.CopyTo(data, 0);
-
-            return new XZYNibbleArray(_xdim, _ydim, _zdim, data);
-        }
-
-        #endregion
+        Data = data;
     }
 
-    public sealed class YZXNibbleArray : NibbleArray, IDataArray3
+    protected byte[] Data { get; }
+
+    #region ICopyable<NibbleArray> Members
+
+    public virtual NibbleArray Copy()
     {
-        private readonly int _xdim;
-        private readonly int _ydim;
-        private readonly int _zdim;
+        var data = new byte[Data.Length];
+        Data.CopyTo(data, 0);
 
-        public YZXNibbleArray (int xdim, int ydim, int zdim)
-            : base(xdim * ydim * zdim)
-        {
-            _xdim = xdim;
-            _ydim = ydim;
-            _zdim = zdim;
-        }
-
-        public YZXNibbleArray (int xdim, int ydim, int zdim, byte[] data)
-            : base(data)
-        {
-            _xdim = xdim;
-            _ydim = ydim;
-            _zdim = zdim;
-
-            if (xdim * ydim * zdim != data.Length * 2) {
-                throw new ArgumentException("Product of dimensions must equal half length of raw data");
-            }
-        }
-
-        public int this[int x, int y, int z]
-        {
-            get
-            {
-                int index = _xdim * (y * _zdim + z) + x;
-                return this[index];
-            }
-
-            set
-            {
-                int index = _xdim * (y * _zdim + z) + x;
-                this[index] = value;
-            }
-        }
-
-        public int XDim
-        {
-            get { return _xdim; }
-        }
-
-        public int YDim
-        {
-            get { return _ydim; }
-        }
-
-        public int ZDim
-        {
-            get { return _zdim; }
-        }
-
-        public int GetIndex (int x, int y, int z)
-        {
-            return _xdim * (y * _zdim + z) + x;
-        }
-
-        public void GetMultiIndex (int index, out int x, out int y, out int z)
-        {
-            int xzdim = _xdim * _zdim;
-            y = index / xzdim;
-
-            int zx = index - (y * xzdim);
-            z = zx / _xdim;
-            x = zx - (z * _xdim);
-        }
-
-        #region ICopyable<NibbleArray> Members
-
-        public override NibbleArray Copy ()
-        {
-            byte[] data = new byte[Data.Length];
-            Data.CopyTo(data, 0);
-
-            return new YZXNibbleArray(_xdim, _ydim, _zdim, data);
-        }
-
-        #endregion
+        return new NibbleArray(data);
     }
+
+    #endregion
+
+    public int this[int index]
+    {
+        get
+        {
+            var subs = index >> 1;
+            if ((index & 1) == 0) return (byte)(Data[subs] & 0x0F);
+
+            return (byte)((Data[subs] >> 4) & 0x0F);
+        }
+
+        set
+        {
+            var subs = index >> 1;
+            if ((index & 1) == 0)
+                Data[subs] = (byte)((Data[subs] & 0xF0) | (value & 0x0F));
+            else
+                Data[subs] = (byte)((Data[subs] & 0x0F) | ((value & 0x0F) << 4));
+        }
+    }
+
+    public int Length => Data.Length << 1;
+
+    public int DataWidth => 4;
+
+    public void Clear()
+    {
+        for (var i = 0; i < Data.Length; i++) Data[i] = 0;
+    }
+}
+
+public sealed class XZYNibbleArray : NibbleArray, IDataArray3
+{
+    public XZYNibbleArray(int xdim, int ydim, int zdim)
+        : base(xdim * ydim * zdim)
+    {
+        XDim = xdim;
+        YDim = ydim;
+        ZDim = zdim;
+    }
+
+    public XZYNibbleArray(int xdim, int ydim, int zdim, byte[] data)
+        : base(data)
+    {
+        XDim = xdim;
+        YDim = ydim;
+        ZDim = zdim;
+
+        if (xdim * ydim * zdim != data.Length * 2)
+            throw new ArgumentException("Product of dimensions must equal half length of raw data");
+    }
+
+    public int this[int x, int y, int z]
+    {
+        get
+        {
+            var index = YDim * (x * ZDim + z) + y;
+            return this[index];
+        }
+
+        set
+        {
+            var index = YDim * (x * ZDim + z) + y;
+            this[index] = value;
+        }
+    }
+
+    public int XDim { get; }
+
+    public int YDim { get; }
+
+    public int ZDim { get; }
+
+    public int GetIndex(int x, int y, int z)
+    {
+        return YDim * (x * ZDim + z) + y;
+    }
+
+    public void GetMultiIndex(int index, out int x, out int y, out int z)
+    {
+        var yzdim = YDim * ZDim;
+        x = index / yzdim;
+
+        var zy = index - x * yzdim;
+        z = zy / YDim;
+        y = zy - z * YDim;
+    }
+
+    #region ICopyable<NibbleArray> Members
+
+    public override NibbleArray Copy()
+    {
+        var data = new byte[Data.Length];
+        Data.CopyTo(data, 0);
+
+        return new XZYNibbleArray(XDim, YDim, ZDim, data);
+    }
+
+    #endregion
+}
+
+public sealed class YZXNibbleArray : NibbleArray, IDataArray3
+{
+    public YZXNibbleArray(int xdim, int ydim, int zdim)
+        : base(xdim * ydim * zdim)
+    {
+        XDim = xdim;
+        YDim = ydim;
+        ZDim = zdim;
+    }
+
+    public YZXNibbleArray(int xdim, int ydim, int zdim, byte[] data)
+        : base(data)
+    {
+        XDim = xdim;
+        YDim = ydim;
+        ZDim = zdim;
+
+        if (xdim * ydim * zdim != data.Length * 2)
+            throw new ArgumentException("Product of dimensions must equal half length of raw data");
+    }
+
+    public int this[int x, int y, int z]
+    {
+        get
+        {
+            var index = XDim * (y * ZDim + z) + x;
+            return this[index];
+        }
+
+        set
+        {
+            var index = XDim * (y * ZDim + z) + x;
+            this[index] = value;
+        }
+    }
+
+    public int XDim { get; }
+
+    public int YDim { get; }
+
+    public int ZDim { get; }
+
+    public int GetIndex(int x, int y, int z)
+    {
+        return XDim * (y * ZDim + z) + x;
+    }
+
+    public void GetMultiIndex(int index, out int x, out int y, out int z)
+    {
+        var xzdim = XDim * ZDim;
+        y = index / xzdim;
+
+        var zx = index - y * xzdim;
+        z = zx / XDim;
+        x = zx - z * XDim;
+    }
+
+    #region ICopyable<NibbleArray> Members
+
+    public override NibbleArray Copy()
+    {
+        var data = new byte[Data.Length];
+        Data.CopyTo(data, 0);
+
+        return new YZXNibbleArray(XDim, YDim, ZDim, data);
+    }
+
+    #endregion
 }

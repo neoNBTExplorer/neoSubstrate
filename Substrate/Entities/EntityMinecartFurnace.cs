@@ -1,110 +1,91 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Substrate.Nbt;
 
-namespace Substrate.Entities
+namespace Substrate.Entities;
+
+public class EntityMinecartFurnace : EntityMinecart
 {
-    using Substrate.Nbt;
-
-    public class EntityMinecartFurnace : EntityMinecart
-    {
-        public static readonly SchemaNodeCompound MinecartFurnaceSchema = MinecartSchema.MergeInto(new SchemaNodeCompound("")
+    public static readonly SchemaNodeCompound MinecartFurnaceSchema = MinecartSchema.MergeInto(
+        new SchemaNodeCompound("")
         {
             new SchemaNodeScaler("PushX", TagType.TAG_DOUBLE),
             new SchemaNodeScaler("PushZ", TagType.TAG_DOUBLE),
-            new SchemaNodeScaler("Fuel", TagType.TAG_SHORT),
+            new SchemaNodeScaler("Fuel", TagType.TAG_SHORT)
         });
 
-        public static new string TypeId
-        {
-            get { return EntityMinecart.TypeId; }
-        }
+    private short _fuel;
 
-        private double _pushX;
-        private double _pushZ;
-        private short _fuel;
-
-        public double PushX
-        {
-            get { return _pushX; }
-            set { _pushX = value; }
-        }
-
-        public double PushZ
-        {
-            get { return _pushZ; }
-            set { _pushZ = value; }
-        }
-
-        public int Fuel
-        {
-            get { return _fuel; }
-            set { _fuel = (short)value; }
-        }
-
-        protected EntityMinecartFurnace (string id)
-            : base(id)
-        {
-        }
-
-        public EntityMinecartFurnace ()
-            : base()
-        {
-        }
-
-        public EntityMinecartFurnace (TypedEntity e)
-            : base(e)
-        {
-            EntityMinecartFurnace e2 = e as EntityMinecartFurnace;
-            if (e2 != null) {
-                _pushX = e2._pushX;
-                _pushZ = e2._pushZ;
-                _fuel = e2._fuel;
-            }
-        }
-
-
-        #region INBTObject<Entity> Members
-
-        public override TypedEntity LoadTree (TagNode tree)
-        {
-            TagNodeCompound ctree = tree as TagNodeCompound;
-            if (ctree == null || base.LoadTree(tree) == null) {
-                return null;
-            }
-
-            _pushX = ctree["PushX"].ToTagDouble();
-            _pushZ = ctree["PushZ"].ToTagDouble();
-            _fuel = ctree["Fuel"].ToTagShort();
-
-            return this;
-        }
-
-        public override TagNode BuildTree ()
-        {
-            TagNodeCompound tree = base.BuildTree() as TagNodeCompound;
-            tree["PushX"] = new TagNodeDouble(_pushX);
-            tree["PushZ"] = new TagNodeDouble(_pushZ);
-            tree["Fuel"] = new TagNodeShort(_fuel);
-
-            return tree;
-        }
-
-        public override bool ValidateTree (TagNode tree)
-        {
-            return new NbtVerifier(tree, MinecartFurnaceSchema).Verify();
-        }
-
-        #endregion
-
-
-        #region ICopyable<Entity> Members
-
-        public override TypedEntity Copy ()
-        {
-            return new EntityMinecartFurnace(this);
-        }
-
-        #endregion
+    protected EntityMinecartFurnace(string id)
+        : base(id)
+    {
     }
+
+    public EntityMinecartFurnace()
+    {
+    }
+
+    public EntityMinecartFurnace(TypedEntity e)
+        : base(e)
+    {
+        var e2 = e as EntityMinecartFurnace;
+        if (e2 != null)
+        {
+            PushX = e2.PushX;
+            PushZ = e2.PushZ;
+            _fuel = e2._fuel;
+        }
+    }
+
+    public new static string TypeId => EntityMinecart.TypeId;
+
+    public double PushX { get; set; }
+
+    public double PushZ { get; set; }
+
+    public int Fuel
+    {
+        get => _fuel;
+        set => _fuel = (short)value;
+    }
+
+
+    #region ICopyable<Entity> Members
+
+    public override TypedEntity Copy()
+    {
+        return new EntityMinecartFurnace(this);
+    }
+
+    #endregion
+
+
+    #region INBTObject<Entity> Members
+
+    public override TypedEntity LoadTree(TagNode tree)
+    {
+        var ctree = tree as TagNodeCompound;
+        if (ctree == null || base.LoadTree(tree) == null) return null;
+
+        PushX = ctree["PushX"].ToTagDouble();
+        PushZ = ctree["PushZ"].ToTagDouble();
+        _fuel = ctree["Fuel"].ToTagShort();
+
+        return this;
+    }
+
+    public override TagNode BuildTree()
+    {
+        var tree = base.BuildTree() as TagNodeCompound;
+        tree["PushX"] = new TagNodeDouble(PushX);
+        tree["PushZ"] = new TagNodeDouble(PushZ);
+        tree["Fuel"] = new TagNodeShort(_fuel);
+
+        return tree;
+    }
+
+    public override bool ValidateTree(TagNode tree)
+    {
+        return new NbtVerifier(tree, MinecartFurnaceSchema).Verify();
+    }
+
+    #endregion
 }

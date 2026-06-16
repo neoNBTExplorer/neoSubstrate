@@ -1,84 +1,82 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace Substrate
+namespace Substrate;
+
+/// <summary>
+///     Provides read-only indexed access to an underlying resource.
+/// </summary>
+/// <typeparam name="T">The type of the underlying resource.</typeparam>
+public interface ICacheTable<T> : IEnumerable<T>
 {
     /// <summary>
-    /// Provides read-only indexed access to an underlying resource.
+    ///     Gets the value at the given index.
     /// </summary>
-    /// <typeparam name="T">The type of the underlying resource.</typeparam>
-    public interface ICacheTable<T> : IEnumerable<T>
+    /// <param name="index">The index to fetch.</param>
+    T this[int index] { get; }
+}
+
+/*internal class CacheTableArray<T> : ICacheTable<T>
+{
+    private T[] _cache;
+
+    public T this[int index]
     {
-        /// <summary>
-        /// Gets the value at the given index.
-        /// </summary>
-        /// <param name="index">The index to fetch.</param>
-        T this[int index] { get; }
+        get { return _cache[index]; }
     }
 
-    /*internal class CacheTableArray<T> : ICacheTable<T>
+    public CacheTableArray (T[] cache)
     {
-        private T[] _cache;
-
-        public T this[int index]
-        {
-            get { return _cache[index]; }
-        }
-
-        public CacheTableArray (T[] cache)
-        {
-            _cache = cache;
-        }
+        _cache = cache;
     }
+}
 
-    internal class CacheTableDictionary<T> : ICacheTable<T>
+internal class CacheTableDictionary<T> : ICacheTable<T>
+{
+    private Dictionary<int, T> _cache;
+    private static Random _rand = new Random();
+
+    public T this[int index]
     {
-        private Dictionary<int, T> _cache;
-        private static Random _rand = new Random();
-
-        public T this[int index]
+        get
         {
-            get
-            {
-                T val;
-                if (_cache.TryGetValue(index, out val)) {
-                    return val;
-                }
-                return default(T);
+            T val;
+            if (_cache.TryGetValue(index, out val)) {
+                return val;
             }
-        }
-
-        public CacheTableDictionary (Dictionary<int, T> cache)
-        {
-            _cache = cache;
+            return default(T);
         }
     }
+
+    public CacheTableDictionary (Dictionary<int, T> cache)
+    {
+        _cache = cache;
+    }
+}
+
+/// <summary>
+/// Provides read-only indexed access to an underlying resource.
+/// </summary>
+/// <typeparam name="T">The type of the underlying resource.</typeparam>
+public class CacheTable<T>
+{
+    ICacheTable<T> _cache;
 
     /// <summary>
-    /// Provides read-only indexed access to an underlying resource.
+    /// Gets the value at the given index.
     /// </summary>
-    /// <typeparam name="T">The type of the underlying resource.</typeparam>
-    public class CacheTable<T>
+    /// <param name="index"></param>
+    public T this[int index]
     {
-        ICacheTable<T> _cache;
+        get { return _cache[index]; }
+    }
 
-        /// <summary>
-        /// Gets the value at the given index.
-        /// </summary>
-        /// <param name="index"></param>
-        public T this[int index]
-        {
-            get { return _cache[index]; }
-        }
+    internal CacheTable (T[] cache)
+    {
+        _cache = new CacheTableArray<T>(cache);
+    }
 
-        internal CacheTable (T[] cache)
-        {
-            _cache = new CacheTableArray<T>(cache);
-        }
-
-        internal CacheTable (Dictionary<int, T> cache)
-        {
-            _cache = new CacheTableDictionary<T>(cache);
-        }
-    }*/
-}
+    internal CacheTable (Dictionary<int, T> cache)
+    {
+        _cache = new CacheTableDictionary<T>(cache);
+    }
+}*/

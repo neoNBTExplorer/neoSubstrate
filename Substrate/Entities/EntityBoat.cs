@@ -1,56 +1,48 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Substrate.Nbt;
 
-namespace Substrate.Entities
+namespace Substrate.Entities;
+
+public class EntityBoat : TypedEntity
 {
-    using Substrate.Nbt;
-
-    public class EntityBoat : TypedEntity
+    public static readonly SchemaNodeCompound BoatSchema = Schema.MergeInto(new SchemaNodeCompound("")
     {
-        public static readonly SchemaNodeCompound BoatSchema = TypedEntity.Schema.MergeInto(new SchemaNodeCompound("")
-        {
-            new SchemaNodeString("id", TypeId),
-        });
+        new SchemaNodeString("id", TypeId)
+    });
 
-        public static string TypeId
-        {
-            get { return "Boat"; }
-        }
-
-        protected EntityBoat (string id)
-            : base(id)
-        {
-        }
-
-        public EntityBoat ()
-            : this(TypeId)
-        {
-        }
-
-        public EntityBoat (TypedEntity e)
-            : base(e)
-        {
-        }
-
-
-        #region INBTObject<Entity> Members
-
-        public override bool ValidateTree (TagNode tree)
-        {
-            return new NbtVerifier(tree, BoatSchema).Verify();
-        }
-
-        #endregion
-
-
-        #region ICopyable<Entity> Members
-
-        public override TypedEntity Copy ()
-        {
-            return new EntityBoat(this);
-        }
-
-        #endregion
+    protected EntityBoat(string id)
+        : base(id)
+    {
     }
+
+    public EntityBoat()
+        : this(TypeId)
+    {
+    }
+
+    public EntityBoat(TypedEntity e)
+        : base(e)
+    {
+    }
+
+    public static string TypeId => "Boat";
+
+
+    #region INBTObject<Entity> Members
+
+    public override bool ValidateTree(TagNode tree)
+    {
+        return new NbtVerifier(tree, BoatSchema).Verify();
+    }
+
+    #endregion
+
+
+    #region ICopyable<Entity> Members
+
+    public override TypedEntity Copy()
+    {
+        return new EntityBoat(this);
+    }
+
+    #endregion
 }

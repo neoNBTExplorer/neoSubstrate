@@ -1,68 +1,58 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Substrate.Core
+namespace Substrate.Core;
+
+public struct RegionKey : IEquatable<RegionKey>
 {
-    public struct RegionKey : IEquatable<RegionKey>
+    public static RegionKey InvalidRegion = new(int.MinValue, int.MinValue);
+
+    public int X { get; }
+
+    public int Z { get; }
+
+    public RegionKey(int _rx, int _rz)
     {
-        public static RegionKey InvalidRegion = new RegionKey(int.MinValue, int.MinValue);
+        X = _rx;
+        Z = _rz;
+    }
 
-        readonly int rx;
-        readonly int rz;
+    public bool Equals(RegionKey ck)
+    {
+        return X == ck.X && Z == ck.Z;
+    }
 
-        public int X
+    public override bool Equals(object o)
+    {
+        try
         {
-            get { return rx; }
+            return this == (RegionKey)o;
         }
-
-        public int Z
+        catch
         {
-            get { return rz; }
+            return false;
         }
+    }
 
-        public RegionKey (int _rx, int _rz)
-        {
-            rx = _rx;
-            rz = _rz;
-        }
+    public override int GetHashCode()
+    {
+        var hash = 23;
+        hash = hash * 37 + X;
+        hash = hash * 37 + Z;
+        return hash;
+    }
 
-        public bool Equals (RegionKey ck)
-        {
-            return this.rx == ck.rx && this.rz == ck.rz;
-        }
+    public static bool operator ==(RegionKey k1, RegionKey k2)
+    {
+        return k1.X == k2.X && k1.Z == k2.Z;
+    }
 
-        public override bool Equals (Object o)
-        {
-            try {
-                return this == (RegionKey)o;
-            }
-            catch {
-                return false;
-            }
-        }
+    public static bool operator !=(RegionKey k1, RegionKey k2)
+    {
+        return k1.X != k2.X || k1.Z != k2.Z;
+    }
 
-        public override int GetHashCode ()
-        {
-            int hash = 23;
-            hash = hash * 37 + rx;
-            hash = hash * 37 + rz;
-            return hash;
-        }
-
-        public static bool operator == (RegionKey k1, RegionKey k2)
-        {
-            return k1.rx == k2.rx && k1.rz == k2.rz;
-        }
-
-        public static bool operator != (RegionKey k1, RegionKey k2)
-        {
-            return k1.rx != k2.rx || k1.rz != k2.rz;
-        }
-
-        public override string ToString ()
-        {
-            return "(" + rx + ", " + rz + ")";
-        }
+    public override string ToString()
+    {
+        return "(" + X + ", " + Z + ")";
     }
 }
