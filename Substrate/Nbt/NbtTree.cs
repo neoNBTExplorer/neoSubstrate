@@ -275,7 +275,7 @@ public class NbtTree : ICopyable<NbtTree>
         if (gzByte == -1) throw new NBTException(NBTException.MSG_GZIP_ENDOFSTREAM);
 
         var val = new TagNodeList((TagType)gzByte);
-        if (val.ValueType > (TagType)Enum.GetValues(typeof(TagType)).GetUpperBound(0))
+        if (val.ValueType > (TagType)Enum.GetValues<TagType>().GetUpperBound(0))
             throw new NBTException(NBTException.MSG_READ_TYPE);
 
         var lenBytes = new byte[4];
