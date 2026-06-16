@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
-using Ionic.Zlib;
+using System.IO.Compression;
 
 namespace Substrate.Core
 {
@@ -282,7 +282,7 @@ namespace Substrate.Core
                         byte[] data = new byte[length - 1];
                         file.ReadExactly(data, 0, data.Length);
 
-                        Stream ret = new ZlibStream(new MemoryStream(data), CompressionMode.Decompress, true);
+                        Stream ret = new ZLibStream(new MemoryStream(data), CompressionMode.Decompress, true);
                         return ret;
 
                         /*MemoryStream sinkZ = new MemoryStream();
@@ -309,14 +309,14 @@ namespace Substrate.Core
         {
             if (OutOfBounds(x, z)) return null;
 
-            return new ZlibStream(new ChunkBuffer(this, x, z), CompressionMode.Compress);
+            return new ZLibStream(new ChunkBuffer(this, x, z), CompressionMode.Compress);
         }
 
         public Stream GetChunkDataOutputStream (int x, int z, int timestamp)
         {
             if (OutOfBounds(x, z)) return null;
 
-            return new ZlibStream(new ChunkBuffer(this, x, z, timestamp), CompressionMode.Compress);
+            return new ZLibStream(new ChunkBuffer(this, x, z, timestamp), CompressionMode.Compress);
         }
 
         /*
