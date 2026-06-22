@@ -1,5 +1,5 @@
 ## What is this?
-**neoSubstrate** is MallardLuna's fork of Substrate, and is the library that powers neoNBTExplorer.
+**neoSubstrate** is MallardLuna's fork of Substrate, and is the library that powers NBTLoupe.
 
 You can find more information about it in the original README.txt file, now named [**README-Original.txt**](./README-Original.txt).
 
